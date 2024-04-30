@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     // @ExceptionHandler : 특정 클래스에서 발생할 수 있는 예외를 잡아 throw함
-
     public String handleRuntimeException(final  RuntimeException e) {
         log.error("handleRuntimeException : {}", e.getMessage());
         return e.getMessage();

@@ -1,18 +1,56 @@
 package com.JPA_Board.board.controller;
 
-import com.JPA_Board.exception.CustomException;
+import com.JPA_Board.board.dto.BoardRequestDto;
+import com.JPA_Board.board.dto.BoardResponseDto;
+import com.JPA_Board.board.model.BoardService;
 import com.JPA_Board.exception.ErrorCode;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class BoardApiController {
 
+    private final BoardService boardService;
+
+    /*
     @GetMapping("/test")
     public String test() {
         //throw new RuntimeException("Holy! Exception ... ");
         throw new CustomException(ErrorCode.POST_NOT_FOUND);
+    }
+     */
+
+    /**
+     * 게시글 생성
+     * @param params
+     * @return board id
+     */
+    @PostMapping("/boards")
+    public Long save(@RequestBody final BoardRequestDto params) {
+        return boardService.save(params);
+    }
+
+    /**
+     * 게시글 리스트 조회
+     * @return board list
+     */
+    @GetMapping("/boards")
+    public List<BoardResponseDto> findAll() {
+        return boardService.findAll();
+    }
+
+    /**
+     * 게시글 수정
+     * @param id
+     * @param params
+     * @return borad id
+     */
+    @PatchMapping("/boards/{id}")
+    public Long save(@PathVariable final Long id, @RequestBody final BoardRequestDto params) {
+        return boardService.update(id, params);
     }
 }
