@@ -37,6 +37,40 @@
 <th:block layout:fragment="script">
     <script th:inline="javascript">
         /*<![CDATA[*/
+
+        // 게시글 수정의 경우 기존 데이터를 보여줘야 함.
+        // 상세페이지에서는 Object.keys()를 이용했는데, 여기선 필드 개수가 많지 않아서 사용 x
+        window.onload = () => {
+            findBoard();
+        }
+
+        // 게시글 조회
+        function findBoard() {
+
+            const id = /*[[ ${id} ]]*/;
+
+            if ( !id ) {
+                return false;
+            }
+
+            fetch(`/api/boards/${id}`).then(response => {
+                if (!response.ok) {
+                    throw new Error('Request failed...');
+                }
+
+                return response.json();
+
+            }).then(json => {
+                const form = document.getElementById('form');
+                form.title.value = json.title;
+                form.content.value = json.content;
+                form.writer.value = json.writer;
+            }).catch(error => {
+                alert('게시글 정보를 찾을 수 없습니다.');
+                location.href = '/board/list';
+            });
+        }
+
         // 유효성 검사
         function isValid() {
 
@@ -57,7 +91,7 @@
             }
 
             if(!form.content.value.trim()) {
-                alert('작성자를 입력해주세요.');
+                alert('내용을 입력해주세요.');
                 form.content.value = '';
                 form.content.focus();
                 return false;
@@ -81,7 +115,8 @@
                 content : form.content.value,
                 deleteYn : 'N'
             };
-
+/*
+            등록만 할 경우
             // get 방식은 url만 보내주면 되는데, 그 외는 옵션을 필수로 전달해줘야함
             fetch('/api/boards', {
                 // create는 무조건 post
@@ -104,7 +139,33 @@
             }).catch(error => {
                 alert('오류가 발생하였습니다.');
             });
+ */
+
+            // 게시글 수정을 위해 변수 추가
+            const id = /*[[ ${id} ]]*/;         // 컨트롤러에서 전달받은 게시글 번호
+            // uri상의 id 포함 여부를 기준으로 수정(PATCH), 생성(POST) 구분
+            const uri= ( id ) ? `/api/boards/${id}` : '/api/boards';
+            const method = ( id ) ? 'PATCH' : 'POST';
+
+            fetch(uri, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(params)
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Request failed...');
+                }
+
+                alert('저장되었습니다.');
+                location.href = '/board/list';
+
+            }).catch(error => {
+                alert('오류가 발생하였습니다.');
+            })
         }
+
+
+
 
 
 

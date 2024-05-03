@@ -29,7 +29,7 @@ public class BoardService {
     /**
      * 게시글 생성
      * @param params
-     * @return
+     * @return 게시글 id
      */
     @Transactional
     // 서비스(Service) 클래스에서 필수적으로 사용
@@ -43,7 +43,7 @@ public class BoardService {
 
     /**
      * 게시글 리스트 조회
-     * @return
+     * @return 게시글 목록
      */
     public List<BoardResponseDto> findAll() {
         // sort객체 : order by id desc, created_date desc 의미
@@ -67,11 +67,22 @@ public class BoardService {
     }
 
     /**
+     * 게시글 리스트 조회 - (삭제 여부 기준)
+     * @param deleteYn
+     * @return
+     */
+    public List<BoardResponseDto> findAllByDeleteYn(final char deleteYn) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "id", "createdDate");
+        List<Board> list = boardRepository.findAllByDeleteYn(deleteYn, sort);
+        return list.stream().map(BoardResponseDto::new).collect(Collectors.toList());
+    }
+
+    /**
      * 게시글 수정
      * 해당 메서드 실행 종료되면 update 쿼리가 자동으로 실행 -> Dirty Checking (영속성 컨텍스트에 의해 더티 체킹이 가능해짐)
      * @param id
      * @param params
-     * @return
+     * @return 게시글 id
      */
     @Transactional
     public Long update(final Long id, final BoardRequestDto params) {
@@ -88,5 +99,29 @@ public class BoardService {
 //
 //        entity.update(params.getTitle(), params.getContent(), params.getWriter());
 //        return id;
+    }
+
+    /**
+     * 게시글 삭제
+     * @param id
+     * @return 게시글 id
+     */
+    @Transactional
+    public Long delete(final Long id) {
+        Board entity = boardRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.POSTS_NOT_FOUND));
+        entity.delete();
+        return id;
+    }
+
+    /**
+     * 게시글 상세정보 조회
+     * @param id
+     * @return 게시글 정보
+     */
+    @Transactional
+    public BoardResponseDto findById (final  Long id) {
+        Board entity = boardRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.POSTS_NOT_FOUND));
+        entity.increaseHits();
+        return new BoardResponseDto(entity);
     }
 }

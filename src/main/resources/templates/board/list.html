@@ -78,7 +78,7 @@
              */
             // Response는 HTTP 응답 전체를 나타내는 Promise 객체
             // promise의 ok 상태가 true인 경우, 즉 정상적으로 api가 호출된 경우에만 게시글 리스트(json)를 리턴함.
-			fetch('/api/boards').then(response => {
+			fetch('/api/boards?deleteYn=N').then(response => {
 				if (response.ok) {
                     // 리턴된 json은 then()안의 json에 담기게 됨
    					return response.json();
@@ -97,7 +97,8 @@
 							<tr>
     							<td>${json.length - idx}</td>
     							<td class="text-left">
-    								<a href="javascript: void(0);">${obj.title}</a>
+    							    <!-- 제목 클릭 시 상세 페이지 이동 -->
+    								<a href="javascript: void(0);" onclick="goView(${obj.id})">${obj.title}</a>
     							</td>
     							<td>${obj.writer}</td>
     							<!-- moment().format() : 날짜 데이터 더욱 쉽게 컨트롤러 가능 -->
@@ -117,6 +118,11 @@
 				document.getElementById('list').innerHTML = html;
 			});
 		}
+
+        // 게시글 조회
+        function goView(id) {
+             location.href = `/board/view/${id}`;
+        }
 
 	/*]]>*/
     </script>

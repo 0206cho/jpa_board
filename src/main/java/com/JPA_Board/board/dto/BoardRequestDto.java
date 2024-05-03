@@ -1,7 +1,6 @@
 package com.JPA_Board.board.dto;
 
 // 게시글 생성과 수정 처리할 요청 DTO
-// DTO :
 
 import com.JPA_Board.board.entity.Board;
 import lombok.AccessLevel;
