@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" layout:decorate="layout">
+
+<th:block layout:fragment="content">
+    <div class="card-content">
+        <form id="form" class="form-horizontal">
+            <div class="form-group">
+                <label for="title" class="col-sm-2 control-label">제목</label>
+                <div class="col-sm-10">
+                    <input type="text" id="title" class="form-control" placeholder="제목을 입력해 주세요." />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="writer" class="col-sm-2 control-label">이름</label>
+                <div class="col-sm-10">
+                    <input type="text" id="writer" class="form-control" placeholder="이름을 입력해 주세요." />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="content" class="col-sm-2 control-label">내용</label>
+                <div class="col-sm-10">
+                    <textarea id="content" class="form-control" placeholder="내용을 입력해 주세요."></textarea>
+                </div>
+            </div>
+
+            <div class="btn_wrap text-center">
+                <a th:href="@{/board/list}" class="btn btn-default waves-effect waves-light">뒤로가기</a>
+                <button type="button" onclick="save();" class="btn btn-primary waves-effect waves-light">저장하기</button>
+            </div>
+        </form>
+    </div>
+</th:block>
+
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 유효성 검사
+        function isValid() {
+
+            const form = document.getElementById('form');
+
+            if(!form.title.value.trim()){
+                alert('제목을 입력해주세요.');
+                form.title.value = '';
+                form.title.focus();
+                return false;
+            }
+
+            if(!form.writer.value.trim()) {
+                alert('작성자를 입력해주세요.');
+                form.writer.value = '';
+                form.writer.focus();
+                return false;
+            }
+
+            if(!form.content.value.trim()) {
+                alert('작성자를 입력해주세요.');
+                form.content.value = '';
+                form.content.focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        // 게시글 등록 (생성/수정) - 게시글 등록 api 호출
+        function save() {
+
+            if( !isValid() ) {
+                return false;
+            }
+            // 폼 안에 있는 정보 (제목, 작성자, 내용) 접근하기 위한 폼 엘리먼트
+            const form = document.getElementById('form');
+            // 데이터 (제목, 작성자, 내용, 사용 여부) 전달하기 위한 객체
+            const params = {
+                title : form.title.value,
+                writer : form.writer.value,
+                content : form.content.value,
+                deleteYn : 'N'
+            };
+
+            // get 방식은 url만 보내주면 되는데, 그 외는 옵션을 필수로 전달해줘야함
+            fetch('/api/boards', {
+                // create는 무조건 post
+                method: 'POST',
+                // API 호출 시, GET 방식이 아닌 요청은 Content-Type을 application/json으로 설정
+                headers: {
+                        'Content-Type': 'application/json',
+                },
+                // 데이터 전달에 사용되는 옵션, params 객체에 담긴 게시글 정보를 API 서버로 전달
+                body:JSON.stringify(params)
+            }).then(response => {
+                    // 게시글 생성 실패
+                    if (!response.ok) {
+                        // 실패 시 104라인으로 이동
+                        throw new Error('Request failed...');
+                    }
+                    // 게시글 생성 성공
+                    alert('저장되었습니다.');
+                    location.href = '/board/list';
+            }).catch(error => {
+                alert('오류가 발생하였습니다.');
+            });
+        }
+
+
+
+        /*]]>*/
+    </script>
+</th:block>
+
+</html>
