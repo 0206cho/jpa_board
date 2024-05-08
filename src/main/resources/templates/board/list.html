@@ -64,10 +64,28 @@
 		 * 페이지 로딩 시점에 한 번만 실행되는 함수
 		 */
 		window.onload = () => {
-
-			findAll(1);
+            setQueryStringParams();
+			findAll();
             addEnterSearchEvent();
 		}
+
+        // 쿼리 스트링 파라미터 세팅
+        function setQueryStringParams() {
+            // 가장 처음 리스트 페이지 접근
+            if ( !location.search ) {
+                return false;
+            }
+
+            // 검색 조건과 키워드 감싸고 있는 검색 폼
+            const form = document.getElementById('searchForm');
+
+            new URLSearchParams(location.search).forEach((value, key) => {
+                //console.log(`${key} : ${value}`);
+                if (form[key]) {
+                    form[key].value = value;
+                }
+            });
+        }
 
         // 키워드 - 엔터 검색 이벤트 바인딩
         function addEnterSearchEvent() {
@@ -106,6 +124,10 @@
 
         // 게시글 리스트 조회 - 페이지네이션
         function findAll(page) {
+            // pageParam : 쿼리 스트링에 포함된 페이지 번호(page) - 빈 값 전달 시 Number에 의해 0
+            const pageParam = Number(new URLSearchParams(location.search).get('page'));
+            page = (page) ? page : ((pageParam) ? pageParam : 1);
+
             const form = document.getElementById('searchForm');
             const params = {
                 page : page,
@@ -114,6 +136,14 @@
                 searchType : form.searchType.value,
                 keyword : form.keyword.value
             }
+
+            // 이전 페이지 정보 유지
+            const queryString = new URLSearchParams(params).toString();     // parmas에 담긴 key와 value가 연결된 쿼리 스트링이 담기게 됨
+            // replaceState() 함수를 이용해서 변경할 uri pathname : /board/list
+            // localhost:8080/board/list?page=15&recordPerPage=5&pageSize=10&searchType=&keyword=
+            const replaceUri = location.pathname + '?' + queryString;
+            // 전체 3개 인자 중 url만 파라미터로 전달하면 페이지 번호나 검색 버튼 클릭 했을 때 주소창의 값이 변경됨
+            history.replaceState({}, '', replaceUri);
 
             getJson('/api/boards', params).then(response => {
                 if (!Object.keys(response).length) {
@@ -126,12 +156,11 @@
                 let num = response.params.pagination.totalRecordCount - ((response.params.page -1) * response.params.recordPerPage);
 
                 response.list.forEach((obj, idx) => {
+                    const viewUri = `/board/view/${obj.id}` + '?' + queryString;
                     html += `
        				<tr>
   						<td>${num--}</td>
-  						<td class="text-left">
-  							<a href="javascript: void(0);" onclick="goView(${obj.id})">${obj.title}</a>
-  						</td>
+  						<td class="text-left"><a href="${viewUri}">${obj.title}</a></td>
   						<td>${obj.writer}</td>
   						<td>${moment(obj.createdDate).format('YYYY-MM-DD HH:mm:ss')}</td>
   						<td>${obj.hits}</td>
@@ -245,6 +274,8 @@
             // 그려진 html을 페이지네이션 영역에 렌더링함
             document.querySelector('.pagination').innerHTML = html;
         }
+
+
 	/*]]>*/
     </script>
     </th:block>

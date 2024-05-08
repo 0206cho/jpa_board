@@ -26,7 +26,7 @@
             </div>
 
             <div class="btn_wrap text-center">
-                <a th:href="@{/board/list}" class="btn btn-default waves-effect waves-light">뒤로가기</a>
+                <a href="javascript: void(0);" onclick="goList();" class="btn btn-default waves-effect waves-light">뒤로가기</a>
                 <button type="button" onclick="save();" class="btn btn-primary waves-effect waves-light">저장하기</button>
             </div>
         </form>
@@ -116,7 +116,7 @@
                 deleteYn : 'N'
             };
 /*
-            등록만 할 경우
+            // 등록만 할 경우
             // get 방식은 url만 보내주면 되는데, 그 외는 옵션을 필수로 전달해줘야함
             fetch('/api/boards', {
                 // create는 무조건 post
@@ -157,18 +157,20 @@
                 }
 
                 alert('저장되었습니다.');
-                location.href = '/board/list';
+                goList();
 
             }).catch(error => {
                 alert('오류가 발생하였습니다.');
             })
         }
 
-
-
-
-
-
+        /**
+         * 뒤로가기
+         */
+        function goList() {
+            const id = /*[[ ${id} ]]*/;
+            location.href = (id) ? '/board/list' + location.search : '/board/list';
+        }
         /*]]>*/
     </script>
 </th:block>
