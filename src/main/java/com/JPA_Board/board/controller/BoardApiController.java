@@ -4,16 +4,19 @@ import com.JPA_Board.board.dto.BoardRequestDto;
 import com.JPA_Board.board.dto.BoardResponseDto;
 import com.JPA_Board.board.model.BoardService;
 import com.JPA_Board.exception.ErrorCode;
+import com.JPA_Board.paging.CommonParams;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class BoardApiController {
-
+    @Autowired
     private final BoardService boardService;
 
     /*
@@ -39,8 +42,8 @@ public class BoardApiController {
      * @return board list
      */
     @GetMapping("/boards")
-    public List<BoardResponseDto> findAll(@RequestParam final char deleteYn) {
-        return boardService.findAllByDeleteYn(deleteYn);
+    public Map<String, Object> findAll(final CommonParams params) {
+        return boardService.findAll(params);
     }
 
     /**

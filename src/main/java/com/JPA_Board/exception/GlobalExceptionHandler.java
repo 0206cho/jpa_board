@@ -6,7 +6,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+//@RestControllerAdvice
 // @ControllerAdvice : 컨트롤러 전역에서 발생할 수 있는 예외를 잡아 Throw 해줌
 @Slf4j
 // @Slf4j : 해당 어노테이션이 선언된 클래스에 자동으로 로그 객체 생성함

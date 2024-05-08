@@ -1,12 +1,17 @@
 package com.JPA_Board.board.dto;
 
 import com.JPA_Board.board.entity.Board;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-// 게시글 정보를 리턴할 응답 DTO 클래스
+/**
+ * 게시글 정보를 리턴할 응답 DTO 클래스
+ */
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardResponseDto {
 
     private Long id;            //  PK

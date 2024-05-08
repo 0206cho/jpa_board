@@ -6,12 +6,18 @@ import com.JPA_Board.board.dto.BoardResponseDto;
 import com.JPA_Board.board.entity.BoardRepository;
 import com.JPA_Board.exception.CustomException;
 import com.JPA_Board.exception.ErrorCode;
+import com.JPA_Board.paging.CommonParams;
+import com.JPA_Board.paging.Pagination;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +31,8 @@ import java.util.stream.Collectors;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+
+    private final BoardMapper boardMapper;
 
     /**
      * 게시글 생성
@@ -75,6 +83,35 @@ public class BoardService {
         Sort sort = Sort.by(Sort.Direction.DESC, "id", "createdDate");
         List<Board> list = boardRepository.findAllByDeleteYn(deleteYn, sort);
         return list.stream().map(BoardResponseDto::new).collect(Collectors.toList());
+    }
+
+    /**
+     * 게시글 리스트 조회 - (with. pagination information)
+     * @param params
+     * @return
+     */
+    public Map<String, Object> findAll(CommonParams params) {
+
+        // 게시글 수 조회
+        int count = boardMapper.count(params);
+
+        // 등록된 게시글이 없는 경우, 로직 종료 (Null이 아닌 비어있는 map 리턴)
+        if (count < 1) {
+            return Collections.emptyMap();
+        }
+
+        // 페이지네이션 정보 계산
+        Pagination pagination = new Pagination(count, params);
+        params.setPagination(pagination);
+
+        // 게시글 리스트 조회
+        List<BoardResponseDto> list = boardMapper.findAll(params);
+
+        // 데이터 변환
+        Map<String, Object> response = new HashMap<>();
+        response.put("params", params);
+        response.put("list", list);
+        return response;
     }
 
     /**

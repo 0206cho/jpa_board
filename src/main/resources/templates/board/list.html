@@ -8,14 +8,16 @@
 
     <!--/* 검색 영역 */-->
     <div class="input-group" id="adv-search">
-        <select id="searchType" class="form-control" style="width: 100px;">
-            <option value="">전체</option>
-            <option value="title">제목</option>
-            <option value="content">내용</option>
-            <option value="writer">작성자</option>
-        </select>
-        <input type="text" id="searchKeyword" class="form-control" placeholder="키워드를 입력해 주세요." style="width: 300px;" />
-        <button type="button" class="btn btn-primary">
+        <form id="searchForm" onsubmit="return false;">
+            <select id="searchType" class="form-control" style="width: 100px;">
+                <option value="">전체</option>
+                <option value="title">제목</option>
+                <option value="content">내용</option>
+                <option value="writer">작성자</option>
+            </select>
+            <input type="text" id="keyword" class="form-control" placeholder="키워드를 입력해 주세요." style="width: 300px;" />
+        </form>
+        <button type="button" onclick="findAll(1);" class="btn btn-primary">
             <span aria-hidden="true" class="glyphicon glyphicon-search"></span>
         </button>
     </div>
@@ -43,8 +45,10 @@
         </div>
 
         <!-- 페이지네이션 Rendering 영역 -->
-        <nav>
+        <nav aria-label="Page navigation" class="text-center">
+            <ul class="pagination">
 
+            </ul>
         </nav>
     </div>
     </th:block>
@@ -61,13 +65,89 @@
 		 */
 		window.onload = () => {
 
-			findAll();
+			findAll(1);
+            addEnterSearchEvent();
 		}
+
+        // 키워드 - 엔터 검색 이벤트 바인딩
+        function addEnterSearchEvent() {
+            // 검색 키워드 - "keyword"라는 id를 가진 엘리먼트 안에서
+            document.getElementById('keyword').addEventListener('keyup', (e) => {
+                // 엔터키가 입력되었을 때
+                if (e.keyCode === 13) {
+                    // findAll 실행
+                    findAll(1);
+                }
+            });
+        }
+
+        // 조회 API 호출
+        // 기존 findAll()의 fetch API를 GET방식 전용으로 정의
+        // async : 비동기 코드를 동기 코드처럼 실행하기 위해 사용되는 키워드. 즉, 비동기 처리에서 함수의 실행 순서를 보장해주는 역할을 함
+        // url : API 요청 url, params : 쿼리스트링 파라미터
+        async function getJson(uri, params) {
+            // params로 객체를 전달하면,
+            if (params) {
+                //  newURLSearchParams() 이용해 전달받은 객체를 쿼리 스트링 문자열로 변경함
+                // ex) deleteYn 전달 시 getJson('/api/boards', {deleteYn:'N'}) 이런 형태로 호출하면 됨
+                uri = uri + '?' + new URLSearchParams(params).toString();
+            }
+
+            const response = await fetch(uri);
+
+            if (!response.ok) {
+                await response.json().then(error => {
+                    throw error;
+                });
+            }
+
+            return await response.json();
+        }
+
+        // 게시글 리스트 조회 - 페이지네이션
+        function findAll(page) {
+            const form = document.getElementById('searchForm');
+            const params = {
+                page : page,
+                recordPerPage : 10,
+                pageSize : 10,
+                searchType : form.searchType.value,
+                keyword : form.keyword.value
+            }
+
+            getJson('/api/boards', params).then(response => {
+                if (!Object.keys(response).length) {
+                    document.getElementById('list').innerHTML = '<td colspan="5">등록된 게시글이 없습니다.</td>';
+                    drawPages();
+                    return false;
+                }
+
+                let html = '';
+                let num = response.params.pagination.totalRecordCount - ((response.params.page -1) * response.params.recordPerPage);
+
+                response.list.forEach((obj, idx) => {
+                    html += `
+       				<tr>
+  						<td>${num--}</td>
+  						<td class="text-left">
+  							<a href="javascript: void(0);" onclick="goView(${obj.id})">${obj.title}</a>
+  						</td>
+  						<td>${obj.writer}</td>
+  						<td>${moment(obj.createdDate).format('YYYY-MM-DD HH:mm:ss')}</td>
+  						<td>${obj.hits}</td>
+       				</tr>
+       			`;
+                });
+
+                document.getElementById('list').innerHTML = html;
+                drawPages(response.params);
+            });
+        }
 
 		/**
 		 * 게시글 리스트 조회 - 게시글 리스트 조회 API 호출
 		 */
-		 function findAll() {
+		 //function findAll() {
             // Ajax말고 fetch() 사용 - ajax보다 api 간편하게 호출할 수 있도록 브라우저에서 제공
             /*
                 # feat() 함수
@@ -78,52 +158,93 @@
              */
             // Response는 HTTP 응답 전체를 나타내는 Promise 객체
             // promise의 ok 상태가 true인 경우, 즉 정상적으로 api가 호출된 경우에만 게시글 리스트(json)를 리턴함.
-			fetch('/api/boards?deleteYn=N').then(response => {
-				if (response.ok) {
+			//fetch('/api/boards?deleteYn=N').then(response => {
+			//	if (response.ok) {
                     // 리턴된 json은 then()안의 json에 담기게 됨
-   					return response.json();
-				}
-			}).then(json => {
-				let html = '';  // 게시글 html 저장
+   					// return response.json();
+				// }
+			// }).then(json => {
+			// 	let html = '';  // 게시글 html 저장
 
-				if (!json.length) {
+				// if (!json.length) {
                     // 데이터가 없는 경우
-					html = '<td colspan="5">등록된 게시글이 없습니다.</td>';
-				} else {
+					// html = '<td colspan="5">등록된 게시글이 없습니다.</td>';
+				// } else {
                     // 데이터가 있는 경우, json에 담긴 객체의 길이만큼 html 그림
-					json.forEach((obj, idx) => {
+					// json.forEach((obj, idx) => {
                         // ` (백틱) : ${} 표현식으로 데이터 접근할 수 있음 => 데이터나 문자열 연결에 쉬워짐
-						html += `
-							<tr>
-    							<td>${json.length - idx}</td>
-    							<td class="text-left">
+						// html += `
+						// 	<tr>
+    					// 		<td>${json.length - idx}</td>
+    					// 		<td class="text-left">
     							    <!-- 제목 클릭 시 상세 페이지 이동 -->
-    								<a href="javascript: void(0);" onclick="goView(${obj.id})">${obj.title}</a>
-    							</td>
-    							<td>${obj.writer}</td>
+    							// 	<a href="javascript: void(0);" onclick="goView(${obj.id})">${obj.title}</a>
+    							// </td>
+    							// <td>${obj.writer}</td>
     							<!-- moment().format() : 날짜 데이터 더욱 쉽게 컨트롤러 가능 -->
-    							<td>${moment(obj.createdDate).format('YYYY-MM-DD HH:mm:ss')}</td>
-    							<td>${obj.hits}</td>
-							</tr>
-						`;
+    							// <td>${moment(obj.createdDate).format('YYYY-MM-DD HH:mm:ss')}</td>
+    							// <td>${obj.hits}</td>
+						// 	</tr>
+						// `;
                         // ( + ) 기호를 사용하던 기존 방식
                         /*
                         html += '<td>'+ obj.title +'</td>';
                         html += '<td>'+ obj.writer +'</td>';
                         html += '<td>'+ obj.hits +'</td>';
-                         */
-					});
-				}
-
-				document.getElementById('list').innerHTML = html;
-			});
-		}
+            //              */
+			// 		});
+			// 	}
+            //
+			// 	document.getElementById('list').innerHTML = html;
+			// });
+		// }
 
         // 게시글 조회
         function goView(id) {
              location.href = `/board/view/${id}`;
         }
 
+        // 페이지 HTML 렌더링
+        /* findAll() 함수의 Response로 전달받는 params 객체를 이용해서 페이지 번호를 그림
+           CommonParams 타입의 params는 계산된 페이지 정보인 pagination 객체를 가지고 이쏙, 페이지 번호를 그리기 위해선 pagination 객체의 멤버가 필요.
+         */
+        function drawPages(params) {
+
+            // params를 파라미터로 전달받지 않은 경우는 페이지네이션 영역인 클래스 속성이 "pagination"인 엘리먼트의 내부를 초기화
+            if (!params) {
+                document.querySelector('.pagination').innerHTML = '';
+                return false;
+            }
+
+            let html = '';
+            const pagination = params.pagination;
+
+            // 첫 페이지 버튼 (<<)과 이전 페이지 버튼(<) 그림/ 첫 페이지, 이전 페이지
+            if (pagination.existPrevPage) {     // 시작 페이지가 1페이지가 아닌 경우
+                html += `
+                    <li><a href="javascript:void(0)" onclick="findAll(1);" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+                    <li><a href="javascript:void(0)" onclick="findAll(${pagination.startPage -1});" aria-label="Previous"><span aria-hidden="true">&lsaquo;</span></a></li>
+                `;
+            }
+
+            // 페이지 번호
+            // 첫 페이지(startPage)와 끝 페이지(endPage) 사이에 포함된 페이지 번호를 그림
+            for (let i = pagination.startPage; i <= pagination.endPage; i++) {
+                // active : 페이지 번호 중, 현재 페이지 번호와 같은 페이지를 활성화하는 역할
+                const active = (i === params.page) ? 'class="acitve"' : '';
+                html += `<li ${active}><a href="javascript:void(0)" onclick="findAll(${i})">${i}</a></li>`;
+            }
+
+            // 다음 페이지(>), 마지막 페이지(>>) 그림
+            if (pagination.existNextPage) {     // 계산된 페이지 정보 중, 마지막 페이지가 아닌 경우
+                html += `
+                    <li><a href="javascript:void(0)" onclick="findAll(${pagination.endPage +1});" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a></li>
+                    <li><a href="javascript:void(0)" onclick="findAll(${pagination.totalPageCount});" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+                `;
+            }
+            // 그려진 html을 페이지네이션 영역에 렌더링함
+            document.querySelector('.pagination').innerHTML = html;
+        }
 	/*]]>*/
     </script>
     </th:block>
